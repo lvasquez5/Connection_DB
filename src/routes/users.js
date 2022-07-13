@@ -85,16 +85,37 @@ router.delete('/users/:id', (request, response) => {
     });
 });
 // Login
-router.post('/login'.(request, response)=>{
+router.post('/login', async (request, response)=>{
   try {
-    console.log(request.body);
-    const user = userSchema.findOne({
-      email: request.body.email
-    })
+    //console.log(request.body);
+    const user = await userSchema.findOne({
+      email: request.body.email,
+    });
+    //console.log(user);
+    if (user) {
+      const isEqual = await bcryptjs.compare(
+        request.body.password,
+        user.password
+      );
+      //console.log(isEqual);
+      if (isEqual){
+        //response.json({ success: user._id});
+        //response.json({ success: user});
+        const token = jwt.sign({
+          name: user.firstName,
+        },
+        'llaveSecreta');
+      response.json({ token });
+    }else {
+      response.json({message: 'Contraseña incorrecta'});
+    }
+    }else {
+      response.json({ message: 'El usuario no existe'});
+    }
   } catch (error) {
-    response.json({failured: error});
+    response.json({failured: error, description: 'Falló el try'});
   }
-})
+});
 
 module.exports = router;
 
